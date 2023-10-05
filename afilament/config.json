@@ -1,0 +1,17 @@
+{
+  "confocal_img":  "C:/Peter 23-5-19 mCherry anti-CPD/All",
+  "output_analysis_path": "../afilament/analysis_data",
+  "output_verification_path": "../afilament/verification_data",
+  "imgs_objects": "../afilament/img_objects",
+  "nucleus_channel_name": "Cy5-T1",
+
+  "nucleus_unet_model": "../unet/models/CP_epoch200_nucleus_weight.corection_200_labling_WITH_FLAT_V2_512_512_no_agum_V2.pth",
+  "from_top_nucleus_unet_model": "../unet/models/top_nuc_models/CP_epoch200_max_pr_23zeiss_10leica_multiple_cells_no_val.pth",
+  "unet_model_scale":1,
+  "unet_model_thrh": 0.5,
+
+  "norm_th": 65535,
+  "find_biggest_mode": "unet",
+  "nuc_theshold": 7,
+  "nuc_area_min_pixels_num": 15000
+}
