@@ -499,7 +499,7 @@ def get_nuclei_masks(temp_folders, output_analysis_folder, image_path, nuc_thesh
         dim = nucleus_img.shape
 
     # Remove nuclei that touch edges of the image
-    cnts = remove_edge_nuc(cnts, dim)
+    # cnts = remove_edge_nuc(cnts, dim) #I commented it out since for current analysis it would be beneficial remove it manually
     cnts = [cnt for cnt in cnts if cv2.contourArea(cnt) > nuc_area_min_pixels_num]  # removes noise
 
     nuclei_masks = []
@@ -571,7 +571,7 @@ def detect_circles(img):
 
     # Use watershed to segment the image
     labels = watershed(-distance, markers, mask=thresh)
-
+    count = 0
     for region in np.unique(labels):
         # skip background
         if region == 0:
@@ -580,7 +580,7 @@ def detect_circles(img):
         # Get the region properties
         region_mask = ((labels == region) * 255).astype(np.uint8)
         props = cv2.connectedComponentsWithStats(region_mask, connectivity=8)
-
+        count = count + 1
         # Draw a circle for each connected component
         for i in range(1, props[0]):
             center = (int(props[3][i][0]), int(props[3][i][1]))
@@ -589,4 +589,4 @@ def detect_circles(img):
             # Draw the circle on the original image.
             cv2.circle(img_display, center, radius, (0, 255, 255), 2)  # Yellow color
 
-    return img_display
+    return img_display, count

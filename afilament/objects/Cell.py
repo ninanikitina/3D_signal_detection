@@ -10,15 +10,18 @@ class Cell(object):
         self.img_number = img_num
         self.number = cell_num
         self.nucleus = None
+        self.foci_count = None
         self.channels = [Channel(channel_name) for channel_name in channel_names]
 
     def count_foci(self, foci_image):
         nuc_3D_normalized = cv2.normalize(self.nucleus.nuc_3D_whole_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         mip_8bit = np.amax(nuc_3D_normalized, axis=2)
-        img = Utils.detect_circles(mip_8bit)
+        img, foci_count = Utils.detect_circles(mip_8bit)
 
         # Add the mip_8bit image to the foci_image.
         foci_image = cv2.add(foci_image, img)
+
+        self.foci_count = foci_count
 
         return foci_image  # Returns the accumulated foci_image.
 

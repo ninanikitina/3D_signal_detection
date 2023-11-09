@@ -12,7 +12,7 @@ def main():
     with open("../afilament/config.json", "r") as f:
         config = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
 
-    img_nums = range(0, 152)
+    img_nums = range(0, 178)
     print(img_nums)
 
     javabridge.start_vm(class_path=bioformats.JARS)

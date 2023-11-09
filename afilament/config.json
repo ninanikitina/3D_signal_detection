@@ -1,5 +1,5 @@
 {
-  "confocal_img":  "C:/Peter 23-5-19 mCherry anti-CPD/All",
+  "confocal_img":  "D:/BioLab/img/Anamaria_imgs",
   "output_analysis_path": "../afilament/analysis_data",
   "output_verification_path": "../afilament/verification_data",
   "imgs_objects": "../afilament/img_objects",
