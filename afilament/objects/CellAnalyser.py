@@ -68,13 +68,13 @@ class CellAnalyser(object):
             nuc_name = f"img-{img_num}_cell-{i}"
             cell.nucleus.save_nucleus_mesh(self.img_resolution, nuc_name)
             cells.append(cell)
-            foci_image = cell.count_foci(foci_image)
+            # foci_image = cell.count_foci(foci_image)
             self.total_cells_number += 1
 
-        #Save foci image to show Anamaria if foci is accuratelly found
-        img_base_path = os.path.splitext(os.path.basename(reader.image_path))[0]
-        foci_path = os.path.join(self.output_data_folder, "foci_" + img_base_path + ".png")
-        cv2.imwrite(foci_path, foci_image)
+        # #Save foci image to show Anamaria if foci is accuratelly found
+        # img_base_path = os.path.splitext(os.path.basename(reader.image_path))[0]
+        # foci_path = os.path.join(self.output_data_folder, "foci_" + img_base_path + ".png")
+        # cv2.imwrite(foci_path, foci_image)
 
         return cells, Path(reader.image_path).name
 
@@ -85,7 +85,7 @@ class CellAnalyser(object):
         Utils.сut_out_mask(nucleus_mask, temp_folders["nuc_raw"], temp_folders["cut_out_nuc"], 'nucleus')
         cnt_extremes = Contour.get_cnt_extremes(Contour.get_mask_cnt(nucleus_mask))
         cell.analyze_nucleus(temp_folders, self.unet_parm, self.img_resolution,
-                             self.output_data_folder, self.norm_th, cnt_extremes)
+                             self.output_data_folder, self.norm_th, cnt_extremes, nucleus_mask)
 
         print(f"Cell #{cell_num}\n")
         cell.analyze_channels(temp_folders["raw"], cnt_extremes, nucleus_mask, self.nuc_theshold, self.nucleus_channel_name)
@@ -98,12 +98,12 @@ class CellAnalyser(object):
 
     def save_aggregated_cells_stat_list(self, stat_list, channels):
         basic_info = ["Image_name", "Img_num", "Cell_num", "Nucleus_volume, cubic_micrometre",
-                      "Nucleus_length, micrometre",
+                      "Nucleus_cylinder, pixels_number", "Nucleus_length, micrometre",
                       "Nucleus_width, micrometre", "Nucleus_high, micrometre"]
 
         channel_info = [
-            [f"{channel.name} av_signal_in_nuc_area_3D", f"{channel.name} has ring",
-             f"{channel.name} ring intensity coef"]
+            [f"{channel.name} av_signal_in_nuc_area_3D", f"{channel.name} sum_pix_in_nuc_cylinder",
+             f"{channel.name} has ring", f"{channel.name} ring intensity coef"]
             for channel in channels
         ]
         header_row = basic_info + [item for sublist in channel_info for item in sublist]
@@ -145,3 +145,27 @@ class CellAnalyser(object):
         Utils.get_nuclei_masks(temp_folders, output_folder,
                                reader.image_path, self.nuc_theshold, self.nuc_area_min_pixels_num,
                                self.find_biggest_mode, img_num, self.unet_parm)
+
+
+    def save_nuc_verification_and_mask(self, img_num, output_folder_ver, output_folder_masks):
+        """
+        Save nucleus area verificatin imagies. This function is helpful to verify different settings
+        """
+        for folder in temp_folders.values():
+            Utils.prepare_folder(folder)
+
+
+        reader = ConfocalImgReader(self.confocal_path, self.nucleus_channel_name, img_num, self.norm_th)
+        reader.read_nucleus_layers(temp_folders["nuc_raw"])
+        nuclei_masks = Utils.get_nuclei_masks(temp_folders, output_folder_ver,
+                               reader.image_path, self.nuc_theshold, self.nuc_area_min_pixels_num,
+                               self.find_biggest_mode, img_num, self.unet_parm)
+
+        stacked_masks = np.stack(nuclei_masks, axis=0)
+        sum_projection = np.sum(stacked_masks, axis=0).astype(dtype=np.uint8)
+
+        img_base_path = os.path.splitext(os.path.basename(reader.image_path))[0]
+
+        mask_path = os.path.join(output_folder_masks, img_base_path + ".png")
+        cv2.imwrite(mask_path, sum_projection)
+

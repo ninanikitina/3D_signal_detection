@@ -26,14 +26,11 @@ class Cell(object):
         return foci_image  # Returns the accumulated foci_image.
 
 
-
-
-
-    def analyze_nucleus(self, folders, unet_parm, img_resolution, analysis_folder, norm_th, cnt_extremes):
+    def analyze_nucleus(self, folders, unet_parm, img_resolution, analysis_folder, norm_th, cnt_extremes, nuc_max_projection_mask):
         """
         Run nucleus analysis of the cell
         """
-        nucleus = Nucleus()
+        nucleus = Nucleus(nuc_max_projection_mask)
         nucleus.reconstruct(folders, unet_parm, img_resolution, analysis_folder, norm_th, cnt_extremes)
         self.nucleus = nucleus
 
@@ -44,7 +41,7 @@ class Cell(object):
         for channel in self.channels:
             cut_img_3d_full_size = Utils.combine_masked_images_into_3d(nuc_max_projection_mask, raw_img_folder, channel.name)
             channel.cut_3d_img = Utils.get_yz_xsection_3d(cut_img_3d_full_size, cnt_extremes)
-            channel.quantify_signals(self.nucleus, nuc_max_projection_mask, cut_img_3d_full_size, biggest_slice_index)
+            channel.quantify_signals(self.nucleus, cut_img_3d_full_size, biggest_slice_index)
 
             # #This method of finding correspondence between two channels is based on masks intersection as an outcome this
             # channel_biggest_slice = cut_img_3d_full_size[:, :, biggest_slice_index]
@@ -63,8 +60,8 @@ class Cell(object):
 
     def get_aggregated_cell_stat(self):
         """
-        [_, "Img_num", "Cell_num", "Nucleus_volume, cubic_micrometre", "Nucleus_length, micrometre",
-        "Nucleus_width, micrometre", "Nucleus_high, micrometre", "Nucleus_total_intensity",
+        [_, "Img_num", "Cell_num", "Nucleus_volume, cubic_micrometre",  "Nucleus_cylinder, pixels_number",
+        "Nucleus_length, micrometre", "Nucleus_width, micrometre", "Nucleus_high, micrometre", "Nucleus_total_intensity",
         "Channel_signal_in_nuc_area", "Channel_signal_in_ring_area", "Does_this_channel_has_ring"]
         """
 
@@ -72,13 +69,14 @@ class Cell(object):
             self.img_number,
             self.number,
             self.nucleus.nuc_volume,
+            self.nucleus.nuc_cylinder_pix_num,
             self.nucleus.nuc_length,
             self.nucleus.nuc_width,
             self.nucleus.nuc_high_alternative
         ]
 
         channel_info = [
-            [channel.av_signal_in_nuc_area_3D, channel.has_ring, channel.ring_intensity_coef]
+            [channel.av_signal_in_nuc_area_3D, channel.sum_pix_in_nuc_cylinder, channel.has_ring, channel.ring_intensity_coef]
             for channel in self.channels
         ]
 

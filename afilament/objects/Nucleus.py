@@ -17,7 +17,8 @@ class Nucleus(object):
     Creates an object that track all nucleus information
     """
 
-    def __init__(self):
+    def __init__(self, nuc_max_projection_mask):
+        self.nuc_max_projection_mask = nuc_max_projection_mask
         self.nuc_volume = None
         self.nuc_length = None
         self.nuc_width = None
@@ -28,6 +29,8 @@ class Nucleus(object):
         self.nucleus_3d_img = None
         self.nuc_3D_whole_img = None #This image depict whole picture
         self.nuc_intensity = None
+        self.nuc_cylinder_pix_num = None
+
 
     def reconstruct(self, temp_folders, unet_parm, resolution, analysis_folder, norm_th, cnt_extremes):
         """
@@ -65,6 +68,7 @@ class Nucleus(object):
         point_cloud = np.array(self.point_cloud)
         self.nuc_high_alternative = (max(point_cloud[:, 2]) - min(point_cloud[:, 2])) * resolution.z
         self.nuc_high = 2 * self.nuc_volume * 3/4 / (math.pi * self.nuc_length/2 * self.nuc_width/2)
+        self.nuc_cylinder_pix_num = np.count_nonzero(self.nuc_max_projection_mask) * nucleus_3d_img.shape[2]
 
 
     def  get_cut_off_z(self, cap_bottom_ratio):

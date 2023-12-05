@@ -15,7 +15,7 @@ from afilament.objects import Utils
 def main():
 
     # Specify image numbers to be analyzed
-    img_nums = range(0, 149)
+    img_nums = range(0, 23)
 
     # Start Java virtual machine for Bioformats library
     javabridge.start_vm(class_path=bioformats.JARS)
