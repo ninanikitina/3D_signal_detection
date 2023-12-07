@@ -1,5 +1,5 @@
 {
-  "confocal_img":  "C:/img_Anamaria_part2/0 hr",
+  "confocal_img":  "C:/img_Anamaria_part2/test",
   "output_analysis_path": "../afilament/analysis_data",
   "output_verification_path": "../afilament/verification_data",
   "nucleus_channel_name": "Cy5-T1",

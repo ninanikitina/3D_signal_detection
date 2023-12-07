@@ -6,6 +6,8 @@ import logging
 import json
 from types import SimpleNamespace
 import argparse
+import sys
+sys.path.insert(0, 'D:/BioLab/src_3D_signal_detection')
 
 from objects.CellAnalyser import CellAnalyser
 from objects.Parameters import CellsImg
@@ -55,6 +57,7 @@ def parse_arguments():
 
 
 def main():
+
     args = parse_arguments()
     config = load_config("config.json", args.img_path)
     logger = setup_logging()
