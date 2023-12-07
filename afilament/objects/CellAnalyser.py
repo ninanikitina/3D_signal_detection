@@ -1,29 +1,16 @@
 import os
 import csv
 import json
-import cv2.cv2 as cv2
+import cv2
 from pathlib import Path
 from datetime import datetime
 import numpy as np
 
-from afilament.objects import Utils
-from afilament.objects.ConfocalImgReader import ConfocalImgReader
-from afilament.objects import Contour
-from afilament.objects.Cell import Cell
-from afilament.objects.Parameters import UnetParam
-
-temp_folders = {
-    "raw": '../afilament/temp/czi_layers',
-    "nuc_raw": '../afilament/temp/czi_layers_nuc',
-    "cut_out_nuc": '../afilament/temp/actin_and_nucleus_layers',
-    "cut_out_channel": '../afilament/temp/actin_and_nucleus_layers',
-    "nucleous_xsection": '../afilament/temp/nucleus_layers',
-    "nucleous_xsection_unet": '../afilament/temp/nucleus_layers_unet',
-    "nucleus_mask": '../afilament/temp/nucleus_mask',
-    "nucleus_top_mask": '../afilament/temp/nucleus_top_mask',
-    "nucleus_top_img": '../afilament/temp/nucleus_top_img',
-    "nuclei_top_masks": '../afilament/temp/nuclei_top_masks',
-}
+from objects import Utils
+from objects.ConfocalImgReader import ConfocalImgReader
+from objects import Contour
+from objects.Cell import Cell
+from objects.Parameters import UnetParam
 
 
 class CellAnalyser(object):
@@ -39,23 +26,43 @@ class CellAnalyser(object):
         self.total_img_number = 0
         self.total_cells_number = 0
         self.find_biggest_mode = config.find_biggest_mode
+        # Set output_data_folder to include confocal_dir_name
         self.output_data_folder = config.output_analysis_path
         self.channel_names = None
+
+        confocal_dir_name = Path(self.confocal_path).stem
+        self.output_data_folder = config.output_analysis_path + f"/{confocal_dir_name}"
+
+        self.temp_folders = {
+            "raw": f'../afilament/img_data/{confocal_dir_name}/temp/czi_layers',
+            "nuc_raw": f'../afilament/img_data/{confocal_dir_name}/temp/czi_layers_nuc',
+            "cut_out_nuc": f'../afilament/img_data/{confocal_dir_name}/temp/actin_and_nucleus_layers',
+            "cut_out_channel": f'../afilament/img_data/{confocal_dir_name}/temp/actin_and_nucleus_layers',
+            "nucleous_xsection": f'../afilament/img_data/{confocal_dir_name}/temp/nucleus_layers',
+            "nucleous_xsection_unet": f'../afilament/img_data/{confocal_dir_name}/temp/nucleus_layers_unet',
+            "nucleus_mask": f'../afilament/img_data/{confocal_dir_name}/temp/nucleus_mask',
+            "nucleus_top_mask": f'../afilament/img_data/{confocal_dir_name}/temp/nucleus_top_mask',
+            "nucleus_top_img": f'../afilament/img_data/{confocal_dir_name}/temp/nucleus_top_img',
+            "nuclei_top_masks": f'../afilament/img_data/{confocal_dir_name}/temp/nuclei_top_masks',
+        }
+
+
         Utils.prepare_folder(self.output_data_folder)
+
 
     def analyze_img(self, img_num):
 
         # For metadata statistics
         self.total_img_number += 1
 
-        for folder in temp_folders.values():
+        for folder in self.temp_folders.values():
             Utils.prepare_folder(folder)
 
         reader = ConfocalImgReader(self.confocal_path, self.nucleus_channel_name, img_num, self.norm_th)
         self.img_resolution = reader.img_resolution
-        mask_size = reader.read_nucleus_layers(temp_folders["nuc_raw"])
-        self.channel_names = reader.read_all_layers(temp_folders["raw"])
-        nuclei_masks = Utils.get_nuclei_masks(temp_folders, self.output_data_folder,
+        mask_size = reader.read_nucleus_layers(self.temp_folders["nuc_raw"])
+        self.channel_names = reader.read_all_layers(self.temp_folders["raw"])
+        nuclei_masks, nuclei_xy_centers = Utils.get_nuclei_masks(self.temp_folders, self.output_data_folder,
                                               reader.image_path, self.nuc_theshold, self.nuc_area_min_pixels_num,
                                               self.find_biggest_mode, img_num, self.unet_parm)
 
@@ -63,10 +70,17 @@ class CellAnalyser(object):
         # Prepare a grayscale image to show the results.
         foci_image = np.zeros(mask_size, dtype=np.uint8)
 
+        meshes = []
+
         for i, nuc_mask in enumerate(nuclei_masks):
             cell = self.run_analysis(img_num, i, nuc_mask, reader)
-            nuc_name = f"img-{img_num}_cell-{i}"
-            cell.nucleus.save_nucleus_mesh(self.img_resolution, nuc_name)
+
+            folder_name = os.path.basename(os.path.dirname(reader.image_path))
+            file_name = f"img-{os.path.basename(reader.image_path)}_cell-{i}"
+
+
+            cell.nucleus.save_nucleus_mesh(self.img_resolution, folder_name, file_name)
+            meshes.append(cell.nucleus.get_nucleus_mesh(self.img_resolution))
             cells.append(cell)
             # foci_image = cell.count_foci(foci_image)
             self.total_cells_number += 1
@@ -76,19 +90,24 @@ class CellAnalyser(object):
         # foci_path = os.path.join(self.output_data_folder, "foci_" + img_base_path + ".png")
         # cv2.imwrite(foci_path, foci_image)
 
+        folder_name = os.path.basename(os.path.dirname(reader.image_path))
+        file_name = os.path.basename(reader.image_path)
+
+        Utils.save_nuclei_meshes(meshes, nuclei_xy_centers, mask_size, folder_name, file_name)
+
         return cells, Path(reader.image_path).name
 
 
     def run_analysis(self, img_num, cell_num, nucleus_mask, reader):
         cell = Cell(img_num, cell_num, self.channel_names)
 
-        Utils.сut_out_mask(nucleus_mask, temp_folders["nuc_raw"], temp_folders["cut_out_nuc"], 'nucleus')
+        Utils.сut_out_mask(nucleus_mask, self.temp_folders["nuc_raw"], self.temp_folders["cut_out_nuc"], 'nucleus')
         cnt_extremes = Contour.get_cnt_extremes(Contour.get_mask_cnt(nucleus_mask))
-        cell.analyze_nucleus(temp_folders, self.unet_parm, self.img_resolution,
+        cell.analyze_nucleus(self.temp_folders, self.unet_parm, self.img_resolution,
                              self.output_data_folder, self.norm_th, cnt_extremes, nucleus_mask)
 
         print(f"Cell #{cell_num}\n")
-        cell.analyze_channels(temp_folders["raw"], cnt_extremes, nucleus_mask, self.nuc_theshold, self.nucleus_channel_name)
+        cell.analyze_channels(self.temp_folders["raw"], cnt_extremes, nucleus_mask, self.nuc_theshold, self.nucleus_channel_name)
         return cell
 
     def add_aggregated_cells_stat(self, cell_stat_list, cells, img_name):
@@ -136,13 +155,13 @@ class CellAnalyser(object):
         """
         Save nucleus area verificatin imagies. This function is helpful to verify different settings
         """
-        for folder in temp_folders.values():
+        for folder in self.temp_folders.values():
             Utils.prepare_folder(folder)
 
 
         reader = ConfocalImgReader(self.confocal_path, self.nucleus_channel_name, img_num, self.norm_th)
-        reader.read_nucleus_layers(temp_folders["nuc_raw"])
-        Utils.get_nuclei_masks(temp_folders, output_folder,
+        reader.read_nucleus_layers(self.temp_folders["nuc_raw"])
+        Utils.get_nuclei_masks(self.temp_folders, output_folder,
                                reader.image_path, self.nuc_theshold, self.nuc_area_min_pixels_num,
                                self.find_biggest_mode, img_num, self.unet_parm)
 
@@ -151,13 +170,13 @@ class CellAnalyser(object):
         """
         Save nucleus area verificatin imagies. This function is helpful to verify different settings
         """
-        for folder in temp_folders.values():
+        for folder in self.temp_folders.values():
             Utils.prepare_folder(folder)
 
 
         reader = ConfocalImgReader(self.confocal_path, self.nucleus_channel_name, img_num, self.norm_th)
-        reader.read_nucleus_layers(temp_folders["nuc_raw"])
-        nuclei_masks = Utils.get_nuclei_masks(temp_folders, output_folder_ver,
+        reader.read_nucleus_layers(self.temp_folders["nuc_raw"])
+        nuclei_masks = Utils.get_nuclei_masks(self.temp_folders, output_folder_ver,
                                reader.image_path, self.nuc_theshold, self.nuc_area_min_pixels_num,
                                self.find_biggest_mode, img_num, self.unet_parm)
 

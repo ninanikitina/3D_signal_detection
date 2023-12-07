@@ -1,8 +1,7 @@
 {
-  "confocal_img":  "C://img_Anamaria_part2//0 hr",
+  "confocal_img":  "C:/img_Anamaria_part2/0 hr",
   "output_analysis_path": "../afilament/analysis_data",
   "output_verification_path": "../afilament/verification_data",
-  "imgs_objects": "../afilament/img_objects",
   "nucleus_channel_name": "Cy5-T1",
 
   "nucleus_unet_model": "../unet/models/CP_epoch200_nucleus_weight.corection_200_labling_WITH_FLAT_V2_512_512_no_agum_V2.pth",

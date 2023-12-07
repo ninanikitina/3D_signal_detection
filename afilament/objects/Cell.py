@@ -1,8 +1,8 @@
-import cv2.cv2 as cv2
+import cv2
 import numpy as np
-from afilament.objects.Nucleus import Nucleus
-from afilament.objects.Channel import Channel
-from afilament.objects import Utils
+from objects.Nucleus import Nucleus
+from objects.Channel import Channel
+from objects import Utils
 
 
 class Cell(object):

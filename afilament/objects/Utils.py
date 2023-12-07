@@ -1,12 +1,13 @@
 import glob
 import os
 import math
-import cv2.cv2 as cv2
+import cv2
 import numpy as np
 from scipy import ndimage as ndi
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
-from afilament.objects import Contour
+import pyvista as pv
+from objects import Contour
 import matplotlib.pyplot as plt
 from unet.predict import run_predict_unet, run_predict_unet_one_img
 
@@ -515,8 +516,9 @@ def get_nuclei_masks(temp_folders, output_analysis_folder, image_path, nuc_thesh
         nuclei_masks.append(one_nuc_mask_dilation)
 
     draw_and_save_cnts_verification(output_analysis_folder, image_path, cnts, max_projection_origin_size, img_num)
+    nuclei_xy_centers = [Contour.get_cnt_center(cont) for cont in cnts]
 
-    return nuclei_masks
+    return nuclei_masks, nuclei_xy_centers
 
 
 def draw_and_save_cnts_verification(output_analysis_folder, image_path, cnts, max_progection_img, img_num):
@@ -590,3 +592,50 @@ def detect_circles(img):
             cv2.circle(img_display, center, radius, (0, 255, 255), 2)  # Yellow color
 
     return img_display, count
+
+
+def save_nuclei_meshes(meshes, nuclei_xy_centers, xy_size, folder_name, file_name):
+    """
+    Saves all meshes of nuclei as a single STL file using pyvista, positioned according to their centers,
+    with a black border of size xy_size.
+
+    :param meshes: List of pyvista mesh objects to be combined and saved as a single STL file.
+    :param nuclei_xy_centers: List of (x, y) centers for each mesh in pixel coordinates.
+    :param xy_size: Tuple (x, y) size in pixels of the surface border.
+    :param folder_name: Name of the folder to save the combined mesh.
+    :param file_name: Name for the output STL file.
+    """
+    # Create the directory if it doesn't exist
+    mesh_folder = os.path.join('mesh', folder_name)
+    if not os.path.exists(mesh_folder):
+        os.makedirs(mesh_folder)
+
+    combined_mesh = None
+
+    # Create a black border as a flat mesh
+    border = pv.Plane(center=(xy_size[0] / 2, xy_size[1] / 2, 0), i_size=xy_size[0], j_size=xy_size[1])
+    border.color = 'black'
+
+    for mesh_obj, center in zip(meshes, nuclei_xy_centers):
+        # Calculate translation vector
+        current_center = np.mean(mesh_obj.points, axis=0)
+        translated_center = (center[0], center[1], 0)  # Assuming z-coordinate is 0
+        translation_vector = np.array(translated_center) - current_center[:3]
+
+        # Apply translation
+        mesh_obj.translate(translation_vector, inplace=True)
+
+        # Combine the mesh
+        if combined_mesh is None:
+            combined_mesh = mesh_obj
+        else:
+            combined_mesh = combined_mesh.merge(mesh_obj)
+
+    # Merge the border with the combined mesh
+    combined_mesh_with_border = combined_mesh.merge(border)
+
+    # Save the combined mesh with border as a single STL file
+    combined_mesh_with_border.save(os.path.join(mesh_folder, f"{file_name}.stl"))
+
+
+

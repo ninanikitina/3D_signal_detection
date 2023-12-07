@@ -7,8 +7,8 @@ import trimesh
 import pyvista as pv
 import pymeshfix as mf
 
-from afilament.objects import Utils
-from afilament.objects import Contour
+from objects import Utils
+from objects import Contour
 from unet.predict import run_predict_unet
 
 
@@ -141,7 +141,7 @@ class Nucleus(object):
 
         return center_x, center_y, center_z
 
-    def save_nucleus_mesh(self, resolution, name):
+    def save_nucleus_mesh(self, resolution, folder_name, file_name):
 
         image_3d = self.nuc_3D_mask
 
@@ -169,7 +169,43 @@ class Nucleus(object):
         # Smooth the mesh and subdivide it
         smoothed_mesh = scaled_mesh.smooth(n_iter=400)
         final_mesh = smoothed_mesh.subdivide(1, subfilter="loop")
-        final_mesh.save(f'mesh/{name}.stl')
+
+
+        if not os.path.exists(f'mesh/{folder_name}'):
+            os.makedirs(f'mesh/{folder_name}')
+
+        final_mesh.save(f'mesh/{folder_name}/{file_name}.stl')
+
+
+    def get_nucleus_mesh(self, resolution):
+        image_3d = self.nuc_3D_mask
+
+        # Add padding to the image
+        p = 1
+        z0 = np.zeros((p, image_3d.shape[1], image_3d.shape[2]), dtype=image_3d.dtype)
+        z1 = np.zeros((image_3d.shape[0] + p * 2, p, image_3d.shape[2]), dtype=image_3d.dtype)
+        image_3d = np.concatenate((z1, np.concatenate((z0, image_3d, z0), axis=0), z1), axis=1)
+
+        # Generate mesh using marching cubes
+        verts, faces, normals, values = measure.marching_cubes(image_3d, 0, step_size=3, allow_degenerate=False)
+
+        # Flip the z-axis to orient the mesh correctly
+        for v in verts:
+            v[2] *= -1
+        surf_mesh = trimesh.Trimesh(verts, faces, validate=True)
+
+        meshfix = mf.MeshFix(pv.wrap(surf_mesh))
+        meshfix.repair(verbose=True)
+        fixed_mesh = meshfix.mesh
+
+        # Scale the mesh to match the image resolution
+        scaled_mesh = fixed_mesh.scale([1.0, 1.0, resolution.z / resolution.y], inplace=False)
+
+        # Smooth the mesh and subdivide it
+        smoothed_mesh = scaled_mesh.smooth(n_iter=400)
+        final_mesh = smoothed_mesh.subdivide(1, subfilter="loop")
+        return final_mesh
+
 
 
 
