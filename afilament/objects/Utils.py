@@ -267,13 +267,17 @@ def get_3d_img(input_folder):
         - image_3d (np.array): three-dimensional array of images combined layer by layer together
     """
     object_layers = []
+    i = 0
 
     for img_path in glob.glob(input_folder + r"\*"):
         img_name, img_ext = os.path.splitext(os.path.basename(img_path))
         layer = int(img_name.rsplit("_", 1)[1])  # layer number is part of the image name
 
         img = cv2.imread(img_path, cv2.IMREAD_ANYDEPTH)
-        # img = np.flip(img, axis=0)
+        print(f"Debugging image reading:\n"
+              f"img # {i} size: {img.shape}\n"
+              f"img path: {img_path}\n")
+        i+=1
         object_layers.append([img, layer])
 
     object_layers = sorted(object_layers, key=lambda x: x[1], reverse=True)

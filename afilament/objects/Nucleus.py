@@ -63,15 +63,11 @@ class Nucleus(object):
         self.nucleus_3d_img = Utils.get_3d_img(temp_folders["nucleous_xsection"])
         self.nuc_3D_mask = Utils.get_3d_img(temp_folders["nucleus_mask"])
         self.nucleus_reco_3d(resolution, analysis_folder)
+        print(f"Nucleus debugging self.nuc_3D_mask.shape : {self.nuc_3D_mask.shape}")
+        print(f"Nucleus debugging self.nucleus_3d_img.shape : {self.nucleus_3d_img.shape}")
         self.nuc_length = (cnt_extremes.right[0] - cnt_extremes.left[0]) * resolution.x
         self.nuc_width = (cnt_extremes.bottom[1] - cnt_extremes.top[1]) * resolution.y
-
-
         point_cloud = np.array(self.point_cloud)
-        print("Debug Info:")
-        print("point_cloud shape:", point_cloud.shape)
-        print("point_cloud size:", point_cloud.size)
-        print("point_cloud dtype:", point_cloud.dtype)
         self.nuc_high_alternative = (max(point_cloud[:, 2]) - min(point_cloud[:, 2])) * resolution.z
         self.nuc_high = 2 * self.nuc_volume * 3/4 / (math.pi * self.nuc_length/2 * self.nuc_width/2)
         self.nuc_cylinder_pix_num = np.count_nonzero(self.nuc_max_projection_mask) * nucleus_3d_img.shape[2]
@@ -133,8 +129,6 @@ class Nucleus(object):
         self.nuc_volume = volume
         self.nuc_intensity = intensity
         self.point_cloud = points
-        # print(f"###########################POINTS###########################################\n\n\n"
-        #       f"{points}\n\n\n")
 
     def get_nucleus_origin(self):
         """
