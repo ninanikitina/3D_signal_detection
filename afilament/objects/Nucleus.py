@@ -89,6 +89,10 @@ class Nucleus(object):
 
         xdata, ydata, zdata = [], [], []
         volume, intensity = 0, 0
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+              f"Debugging Nucleus 3 D mask:\n"
+              f"nuc_3D_mask.shape: {self.nuc_3D_mask.shape}")
+        i = 0
         for slice in range(self.nuc_3D_mask.shape[0]):
             xsection_mask = self.nuc_3D_mask[slice, :, :]
             xsection_img = self.nucleus_3d_img[slice, :, :]
@@ -98,6 +102,8 @@ class Nucleus(object):
             intensity += np.sum(xsection_img, dtype=np.int64)
 
             slice_cnts = cv2.findContours(xsection_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
+            print(f"Debuging slice_cnts {i} info: {slice_cnts} \n")
+            i += 1
             if len(slice_cnts) != 0:
                 slice_cnt = slice_cnts[np.argmax([len(cnt) for cnt in slice_cnts])]
                 volume += cv2.contourArea(
@@ -127,8 +133,8 @@ class Nucleus(object):
         self.nuc_volume = volume
         self.nuc_intensity = intensity
         self.point_cloud = points
-        print(f"###########################POINTS###########################################\n\n\n"
-              f"{points}\n\n\n")
+        # print(f"###########################POINTS###########################################\n\n\n"
+        #       f"{points}\n\n\n")
 
     def get_nucleus_origin(self):
         """
