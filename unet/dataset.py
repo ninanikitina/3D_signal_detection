@@ -35,7 +35,7 @@ class BasicDataset(Dataset):
         assert newW > 0 and newH > 0, 'Scale is too small'
         pil_img = pil_img.resize((newW, newH))
 
-        img_nd = np.array(pil_img, dtype=np.float)
+        img_nd = np.array(pil_img, dtype=float)
 
 
         if len(img_nd.shape) == 2:

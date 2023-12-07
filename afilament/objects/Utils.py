@@ -7,8 +7,9 @@ from scipy import ndimage as ndi
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
 import pyvista as pv
-from objects import Contour
 import matplotlib.pyplot as plt
+from objects import Contour
+
 from unet.predict import run_predict_unet, run_predict_unet_one_img
 
 

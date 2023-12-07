@@ -1,5 +1,5 @@
 import os
-import cv2.cv2 as cv2
+import cv2
 import numpy as np
 import math
 from skimage import measure
