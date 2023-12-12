@@ -269,7 +269,8 @@ def get_3d_img(input_folder):
     object_layers = []
     i = 0
 
-    for img_path in glob.glob(input_folder + r"\*"):
+    for img_path in glob.glob(os.path.join(input_folder, "*.png")):
+    #for img_path in glob.glob(input_folder + r"\*"): #FOR HISTORY this line caused issues on BSU cluster
         img_name, img_ext = os.path.splitext(os.path.basename(img_path))
         layer = int(img_name.rsplit("_", 1)[1])  # layer number is part of the image name
 

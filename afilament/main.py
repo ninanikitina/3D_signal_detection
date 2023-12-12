@@ -7,6 +7,7 @@ import json
 from types import SimpleNamespace
 import argparse
 import sys
+import glob
 sys.path.insert(0, 'D:/BioLab/src_3D_signal_detection')
 
 from objects.CellAnalyser import CellAnalyser
@@ -52,7 +53,7 @@ class JavaVM:
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Cell Analysis Script")
-    parser.add_argument('--img_path', type=str, help='Path to the confocal image file')
+    parser.add_argument('img_path', type=str, help='Path to the confocal image file')
     return parser.parse_args()
 
 
@@ -69,13 +70,16 @@ def main():
         aggregated_stat_list = []
         channels = None
 
-        for img_num in range(0, 1):
+        img_num=0
+
+        for czi_file in glob.glob(os.path.join(config.confocal_img, '*.czi')):
             # try:
             cells, img_name = analyser.analyze_img(img_num)
             cells_img = CellsImg(img_name, analyser.img_resolution, cells)
             aggregated_stat_list = analyser.add_aggregated_cells_stat(aggregated_stat_list, cells_img.cells,
                                                                       cells_img.name)
             channels = cells_img.cells[0].channels
+            img_num+=1
 
             # except Exception as e:
             #     logger.error(
