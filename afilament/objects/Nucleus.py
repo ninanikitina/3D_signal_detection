@@ -63,8 +63,6 @@ class Nucleus(object):
         self.nucleus_3d_img = Utils.get_3d_img(temp_folders["nucleous_xsection"])
         self.nuc_3D_mask = Utils.get_3d_img(temp_folders["nucleus_mask"])
         self.nucleus_reco_3d(resolution, analysis_folder)
-        print(f"Nucleus debugging self.nuc_3D_mask.shape : {self.nuc_3D_mask.shape}")
-        print(f"Nucleus debugging self.nucleus_3d_img.shape : {self.nucleus_3d_img.shape}")
         self.nuc_length = (cnt_extremes.right[0] - cnt_extremes.left[0]) * resolution.x
         self.nuc_width = (cnt_extremes.bottom[1] - cnt_extremes.top[1]) * resolution.y
         point_cloud = np.array(self.point_cloud)
@@ -85,9 +83,7 @@ class Nucleus(object):
 
         xdata, ydata, zdata = [], [], []
         volume, intensity = 0, 0
-        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-              f"Debugging Nucleus 3 D mask:\n"
-              f"nuc_3D_mask.shape: {self.nuc_3D_mask.shape}")
+
         i = 0
         for slice in range(self.nuc_3D_mask.shape[0]):
             xsection_mask = self.nuc_3D_mask[slice, :, :]
@@ -98,7 +94,6 @@ class Nucleus(object):
             intensity += np.sum(xsection_img, dtype=np.int64)
 
             slice_cnts = cv2.findContours(xsection_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
-            print(f"Debuging slice_cnts {i} info: {slice_cnts} \n")
             i += 1
             if len(slice_cnts) != 0:
                 slice_cnt = slice_cnts[np.argmax([len(cnt) for cnt in slice_cnts])]
@@ -151,7 +146,8 @@ class Nucleus(object):
 
     def save_nucleus_mesh(self, resolution, folder_name, file_name):
 
-        image_3d = self.nuc_3D_mask
+        image_3d = self.nuc_3D_mask.copy()
+        image_3d = image_3d[::-1, ::-1, ::-1]
 
         # Add padding to the image
         p = 1
@@ -161,10 +157,6 @@ class Nucleus(object):
 
         # Generate mesh using marching cubes
         verts, faces, normals, values = measure.marching_cubes(image_3d, 0, step_size=3, allow_degenerate=False)
-
-        # Flip the z-axis to orient the mesh correctly
-        for v in verts:
-            v[2] *= -1
         surf_mesh = trimesh.Trimesh(verts, faces, validate=True)
 
         meshfix = mf.MeshFix(pv.wrap(surf_mesh))
@@ -186,7 +178,8 @@ class Nucleus(object):
 
 
     def get_nucleus_mesh(self, resolution):
-        image_3d = self.nuc_3D_mask
+        image_3d = self.nuc_3D_mask.copy()
+        image_3d = image_3d[::-1, ::-1, ::-1]
 
         # Add padding to the image
         p = 1
@@ -197,9 +190,6 @@ class Nucleus(object):
         # Generate mesh using marching cubes
         verts, faces, normals, values = measure.marching_cubes(image_3d, 0, step_size=3, allow_degenerate=False)
 
-        # Flip the z-axis to orient the mesh correctly
-        for v in verts:
-            v[2] *= -1
         surf_mesh = trimesh.Trimesh(verts, faces, validate=True)
 
         meshfix = mf.MeshFix(pv.wrap(surf_mesh))

@@ -1,5 +1,5 @@
 {
-  "confocal_img":  "test/test",
+  "confocal_img":  "D:/BioLab/Current_experiments/afilament/2023.11.20_KASH_cell_for_paper/img_objects",
   "output_analysis_path": "../afilament/analysis_data",
   "output_verification_path": "../afilament/verification_data",
   "nucleus_channel_name": "Cy5-T1",

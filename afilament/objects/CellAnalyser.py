@@ -79,7 +79,7 @@ class CellAnalyser(object):
             file_name = f"img-{os.path.basename(reader.image_path)}_cell-{i}"
 
 
-            cell.nucleus.save_nucleus_mesh(self.img_resolution, folder_name, file_name)
+            # cell.nucleus.save_nucleus_mesh(self.img_resolution, folder_name, file_name)
             meshes.append(cell.nucleus.get_nucleus_mesh(self.img_resolution))
             cells.append(cell)
             # foci_image = cell.count_foci(foci_image)

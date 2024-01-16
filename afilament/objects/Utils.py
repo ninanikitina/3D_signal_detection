@@ -275,9 +275,6 @@ def get_3d_img(input_folder):
         layer = int(img_name.rsplit("_", 1)[1])  # layer number is part of the image name
 
         img = cv2.imread(img_path, cv2.IMREAD_ANYDEPTH)
-        print(f"Debugging image reading:\n"
-              f"img # {i} size: {img.shape}\n"
-              f"img path: {img_path}\n")
         i+=1
         object_layers.append([img, layer])
 
@@ -622,10 +619,14 @@ def save_nuclei_meshes(meshes, nuclei_xy_centers, xy_size, folder_name, file_nam
     border = pv.Plane(center=(xy_size[0] / 2, xy_size[1] / 2, 0), i_size=xy_size[0], j_size=xy_size[1])
     border.color = 'black'
 
+
     for mesh_obj, center in zip(meshes, nuclei_xy_centers):
-        # Calculate translation vector
+        # Invert the Y coordinate
+        inverted_center = (center[0], xy_size[1] - center[1])
+
+        # Calculate translation vector using the inverted center
         current_center = np.mean(mesh_obj.points, axis=0)
-        translated_center = (center[0], center[1], 0)  # Assuming z-coordinate is 0
+        translated_center = (inverted_center[0], inverted_center[1], 20)  # Set Z-coordinate to 2
         translation_vector = np.array(translated_center) - current_center[:3]
 
         # Apply translation
@@ -637,8 +638,11 @@ def save_nuclei_meshes(meshes, nuclei_xy_centers, xy_size, folder_name, file_nam
         else:
             combined_mesh = combined_mesh.merge(mesh_obj)
 
-    # Merge the border with the combined mesh
-    combined_mesh_with_border = combined_mesh.merge(border)
+    # Merge the meshes with the border_mesh
+    if combined_mesh is None:
+        combined_mesh_with_border = border
+    else:
+        combined_mesh_with_border = combined_mesh.merge(border)
 
     # Save the combined mesh with border as a single STL file
     combined_mesh_with_border.save(os.path.join(mesh_folder, f"{file_name}.stl"))

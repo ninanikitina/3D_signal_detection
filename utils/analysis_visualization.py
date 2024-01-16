@@ -183,10 +183,10 @@ if __name__ == '__main__':
     afilament_folder_path = r"D:/BioLab/Current_experiments/afilament/2023.02.14_DAPI_Alexa488_LIV_Experiment/Second_trial/Control_w20/Initial run/img_objects"
 
     # afilament_folder_path = r"D:\BioLab\Current_experiments\afilament\2023.02.14_DAPI_Alexa488_LIV_Experiment\Second_trial\LIV_w20\Initial run\img_objects"
-    image_index = 9
-    cell_index = 3
-    min_fiber_thr_microns = 7
-    node_actin_len_th = 2
+    image_index = 0
+    cell_index = 0
+    min_fiber_thr_microns = 1
+    node_actin_len_th = 0
     show_branching_nodes = True
     structure = StructureOptions.CAP
     vis_mode = VisualizationModes.ACTIN
