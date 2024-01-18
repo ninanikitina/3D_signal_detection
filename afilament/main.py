@@ -73,18 +73,18 @@ def main():
         img_num=0
 
         for czi_file in glob.glob(os.path.join(config.confocal_img, '*.czi')):
-            # try:
-            cells, img_name = analyser.analyze_img(img_num)
-            cells_img = CellsImg(img_name, analyser.img_resolution, cells)
-            aggregated_stat_list = analyser.add_aggregated_cells_stat(aggregated_stat_list, cells_img.cells,
-                                                                      cells_img.name)
-            channels = cells_img.cells[0].channels
-            img_num+=1
+            try:
+                cells, img_name = analyser.analyze_img(img_num)
+                cells_img = CellsImg(img_name, analyser.img_resolution, cells)
+                aggregated_stat_list = analyser.add_aggregated_cells_stat(aggregated_stat_list, cells_img.cells,
+                                                                          cells_img.name)
+                channels = cells_img.cells[0].channels
+                img_num+=1
 
-            # except Exception as e:
-            #     logger.error(
-            #         f"\n----------- \n Img #{img_num} from file {config.confocal_img} was not analysed. \n Error: {e} \n----------- \n")
-            #     print("An exception occurred")
+            except Exception as e:
+                logger.error(
+                    f"\n----------- \n Img #{img_num} from file {config.confocal_img} was not analysed. \n Error: {e} \n----------- \n")
+                print("An exception occurred")
 
         analyser.save_aggregated_cells_stat_list(aggregated_stat_list, channels)
         analyser.save_config("")

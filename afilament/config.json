@@ -1,5 +1,5 @@
 {
-  "confocal_img":  "D:/BioLab/Current_experiments/afilament/2023.11.20_KASH_cell_for_paper/img_objects",
+  "confocal_img":  "D:/BioLab/img/Anamaria_imgs_test/czi_test",
   "output_analysis_path": "../afilament/analysis_data",
   "output_verification_path": "../afilament/verification_data",
   "nucleus_channel_name": "Cy5-T1",
@@ -11,6 +11,6 @@
 
   "norm_th": 65535,
   "find_biggest_mode": "unet",
-  "nuc_theshold": 7,
+  "nuc_theshold": 10,
   "nuc_area_min_pixels_num": 15000
 }

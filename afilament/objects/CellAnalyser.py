@@ -73,17 +73,21 @@ class CellAnalyser(object):
         meshes = []
 
         for i, nuc_mask in enumerate(nuclei_masks):
-            cell = self.run_analysis(img_num, i, nuc_mask, reader)
+            try:
+                cell = self.run_analysis(img_num, i, nuc_mask, reader)
 
-            folder_name = os.path.basename(os.path.dirname(reader.image_path))
-            file_name = f"img-{os.path.basename(reader.image_path)}_cell-{i}"
+                folder_name = os.path.basename(os.path.dirname(reader.image_path))
+                file_name = f"img-{os.path.basename(reader.image_path)}_cell-{i}"
 
 
-            # cell.nucleus.save_nucleus_mesh(self.img_resolution, folder_name, file_name)
-            meshes.append(cell.nucleus.get_nucleus_mesh(self.img_resolution))
-            cells.append(cell)
-            # foci_image = cell.count_foci(foci_image)
-            self.total_cells_number += 1
+                # cell.nucleus.save_nucleus_mesh(self.img_resolution, folder_name, file_name)
+                meshes.append(cell.nucleus.get_nucleus_mesh(self.img_resolution))
+                cells.append(cell)
+                # foci_image = cell.count_foci(foci_image)
+                self.total_cells_number += 1
+
+            except Exception as e:
+                print(f"An exception occurred in {reader.image_path} cell#{i} was not analysed.\n")
 
         # #Save foci image to show Anamaria if foci is accuratelly found
         # img_base_path = os.path.splitext(os.path.basename(reader.image_path))[0]
