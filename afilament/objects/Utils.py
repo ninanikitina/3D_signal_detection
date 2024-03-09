@@ -479,7 +479,8 @@ def rotate_point(rotated_point, main_point, rot_angle):
 
 
 def get_nuclei_masks(temp_folders, output_analysis_folder, image_path, nuc_theshold,
-                     nuc_area_min_pixels_num, find_biggest_mode, img_num, unet_parm=None):
+                     nuc_area_min_pixels_num, nuc_area_max_pixels_num,
+                     find_biggest_mode, img_num, unet_parm=None):
     img_base_path = os.path.splitext(os.path.basename(image_path))[0]
     max_projection_origin_size, max_progection_unet_size = find_max_projection(temp_folders["nuc_raw"], "nucleus", show_img=False)
     max_projection_path = os.path.join(temp_folders["nucleus_top_img"], img_base_path + ".png")
@@ -503,8 +504,21 @@ def get_nuclei_masks(temp_folders, output_analysis_folder, image_path, nuc_thesh
         dim = nucleus_img.shape
 
     # Remove nuclei that touch edges of the image
-    # cnts = remove_edge_nuc(cnts, dim) #I commented it out since for current analysis it would be beneficial remove it manually
-    cnts = [cnt for cnt in cnts if cv2.contourArea(cnt) > nuc_area_min_pixels_num]  # removes noise
+    cnts = remove_edge_nuc(cnts, dim)
+
+    # Remove too small, too large and not oval-ish shape cnt
+    circularity_threshold = 0.7
+    filtered_cnts = []
+    for cnt in cnts:
+        area = cv2.contourArea(cnt)
+        if area > nuc_area_min_pixels_num and area < nuc_area_max_pixels_num:
+            perimeter = cv2.arcLength(cnt, True)
+            circularity = 4 * np.pi * area / (perimeter ** 2)
+            if circularity >= circularity_threshold:
+                filtered_cnts.append(cnt)
+
+    # Now filtered_cnts contains contours that are above the area threshold and closer to being circular/oval
+    cnts = filtered_cnts
 
     nuclei_masks = []
 

@@ -1,5 +1,5 @@
 {
-  "confocal_img":  "D:/BioLab/img/Anamaria_imgs_test/czi_test",
+  "confocal_img":  "C:/Users/nnina/Desktop/Cisp_Test_Image_Set",
   "output_analysis_path": "../afilament/analysis_data",
   "output_verification_path": "../afilament/verification_data",
   "nucleus_channel_name": "Cy5-T1",
@@ -12,5 +12,6 @@
   "norm_th": 65535,
   "find_biggest_mode": "unet",
   "nuc_theshold": 10,
-  "nuc_area_min_pixels_num": 15000
+  "nuc_area_min_pixels_num": 15000,
+  "nuc_area_max_pixels_num": 1600000
 }

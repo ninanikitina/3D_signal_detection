@@ -23,6 +23,7 @@ class CellAnalyser(object):
         self.norm_th = config.norm_th
         self.img_resolution = None
         self.nuc_area_min_pixels_num = config.nuc_area_min_pixels_num
+        self.nuc_area_max_pixels_num = config.nuc_area_max_pixels_num
         self.total_img_number = 0
         self.total_cells_number = 0
         self.find_biggest_mode = config.find_biggest_mode
@@ -63,7 +64,8 @@ class CellAnalyser(object):
         mask_size = reader.read_nucleus_layers(self.temp_folders["nuc_raw"])
         self.channel_names = reader.read_all_layers(self.temp_folders["raw"])
         nuclei_masks, nuclei_xy_centers = Utils.get_nuclei_masks(self.temp_folders, self.output_data_folder,
-                                              reader.image_path, self.nuc_theshold, self.nuc_area_min_pixels_num,
+                                              reader.image_path, self.nuc_theshold,
+                                              self.nuc_area_min_pixels_num, self.nuc_area_max_pixels_num,
                                               self.find_biggest_mode, img_num, self.unet_parm)
 
         cells = []
