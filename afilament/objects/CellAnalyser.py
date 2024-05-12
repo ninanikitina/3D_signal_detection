@@ -63,10 +63,10 @@ class CellAnalyser(object):
         self.img_resolution = reader.img_resolution
         mask_size = reader.read_nucleus_layers(self.temp_folders["nuc_raw"])
         self.channel_names = reader.read_all_layers(self.temp_folders["raw"])
-        nuclei_masks, nuclei_xy_centers = Utils.get_nuclei_masks(self.temp_folders, self.output_data_folder,
-                                              reader.image_path, self.nuc_theshold,
-                                              self.nuc_area_min_pixels_num, self.nuc_area_max_pixels_num,
-                                              self.find_biggest_mode, img_num, self.unet_parm)
+        nuclei_masks, nuclei_xy_centers, max_progection_img = Utils.get_nuclei_masks(self.temp_folders, self.output_data_folder,
+                                                            reader.image_path, self.nuc_theshold,
+                                                            self.nuc_area_min_pixels_num, self.nuc_area_max_pixels_num,
+                                                            self.find_biggest_mode, img_num, self.unet_parm)
 
         cells = []
         # Prepare a grayscale image to show the results.
@@ -98,6 +98,9 @@ class CellAnalyser(object):
 
         folder_name = os.path.basename(os.path.dirname(reader.image_path))
         file_name = os.path.basename(reader.image_path)
+
+        Utils.draw_and_save_cnts_and_ovals_verification(self.output_data_folder, reader.image_path,
+                                                        max_progection_img, img_num, cells)
 
         Utils.save_nuclei_meshes(meshes, nuclei_xy_centers, mask_size, folder_name, file_name)
 

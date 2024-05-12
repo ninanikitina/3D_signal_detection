@@ -116,9 +116,9 @@ def extract_and_append_image_info(df, image_name_col='Image_name'):
         liv = '+LIV' if '+LIV' in image_name else '-LIV'
 
         # Extract 'Cisp'
-        cisp_pattern = re.compile(r'(\d+uM)|(-Cisplatin)')
+        cisp_pattern = re.compile(r'(\d+um)|(-cisplatin)', re.IGNORECASE)
         cisp_match = cisp_pattern.search(image_name)
-        cisp = cisp_match.group(0) if cisp_match else 'Control'
+        cisp = cisp_match.group(0).lower() if cisp_match else 'Unknown'
 
         return pd.Series([base_image_name, processing, date, time, cell_type, liv, cisp],
                          index=['Base_image_name', 'Processing', 'Date', 'Time', 'Cell Type', 'LIV', 'Cisp'])
@@ -252,7 +252,7 @@ def refine_and_filter_data(df, pixel_size):
     # Rename columns
     columns_to_rename = {
         'Nucleus_volume, cubic_micrometre': 'Nucleus_volume',
-        'Nucleus_high, micrometre': 'Nucleus_high',
+        'Nucleus_high, micrometre': 'Nucleus_height',
         'AF594-T2 ring intensity coef': 'Ring_coefficient',
         'AF488-T3 av_signal_in_nuc_area_3D': 'Average_signal_488',
         'AF488-T3 total_signal_in_nuc_area_3D': 'Total_signal_488',
@@ -270,7 +270,60 @@ def refine_and_filter_data(df, pixel_size):
 
 
 
-def plot_metrics_by_group_and_ring(type_to_analyse, lsm_df, RING_COEFF_CUT_OFF, color1="red", color2="blue"):
+# def plot_metrics_by_group_and_ring(type_to_analyse, lsm_df, RING_COEFF_CUT_OFF, color1="red", color2="blue"):
+#     # Filter DataFrame based on 'Cell Type'
+#     filtered_df = lsm_df[lsm_df['Cell Type'] == type_to_analyse].copy()
+#
+#     # Ensure 'Time' is in the correct format for sorting
+#     filtered_df['Time'] = filtered_df['Time'].astype(int)
+#
+#     # Sort 'Cisp' and 'LIV' as specified, then by 'Time'
+#     # Assuming 'Cisp' values correctly sort with "-Cisplatin" first, adjust if needed
+#     filtered_df.sort_values(by=['Cisp', 'LIV', 'Time'], inplace=True)
+#
+#     # Create 'Group' column after sorting
+#     filtered_df['Group'] = filtered_df['Cisp'] + "_" + filtered_df['LIV'] + "_" + filtered_df['Time'].astype(str) + "hr"
+#
+#     # Setup for plots, one per metric, all in a single column
+#     fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(12, 15), sharex=True)
+#
+#     # Define the metrics to plot
+#     metrics = ['Nucleus_volume', 'Average_signal_488', 'Total_signal_488']
+#     titles = [
+#         f'Ring coeff {RING_COEFF_CUT_OFF} Cell Type: {type_to_analyse} \nNucleus Volume by Group and Ring',
+#         'Average Signal 488 by Group and Ring',
+#         'Total Signal 488 by Group and Ring'
+#     ]
+#
+#     # Custom palette for hue based on 'Ring'
+#     palette = {False: color1, True: color2}
+#
+#     # Create an explicit order for the x-axis based on the sorted 'Group'
+#     group_order = filtered_df['Group'].unique()
+#
+#     for ax_idx, (ax, metric, title) in enumerate(zip(axs, metrics, titles)):
+#         sns.boxplot(x='Group', y=metric, hue='Ring', data=filtered_df, ax=ax, palette=palette, order=group_order)
+#         ax.set_title(title)
+#         ax.set_xlabel('Group' if metric == metrics[-1] else '')  # Only label the x-axis for the bottom plot
+#         ax.set_ylabel(metric)
+#
+#         # For the last plot only, annotate each group with counts for False and True separately
+#         if metric == 'Total_signal_488':
+#             for i, group in enumerate(group_order):
+#                 # Calculate counts for False and True within this group
+#                 false_count = filtered_df[(filtered_df['Group'] == group) & (filtered_df['Ring'] == False)].shape[0]
+#                 true_count = filtered_df[(filtered_df['Group'] == group) & (filtered_df['Ring'] == True)].shape[0]
+#
+#                 # Position the annotations below the group names on the x-axis
+#                 # Adjust the positioning as necessary
+#                 ax.text(i - 0.2, -0.1, f'no-ring:{false_count}', horizontalalignment='center', size='small', color='black', weight='semibold', transform=ax.get_xaxis_transform())
+#                 ax.text(i + 0.2, -0.1, f'ring: {true_count}', horizontalalignment='center', size='small', color='black', weight='semibold', transform=ax.get_xaxis_transform())
+#
+#     plt.tight_layout()
+#     return fig
+
+def plot_metrics_by_group_and_ring(type_to_analyse, lsm_df, RING_COEFF_CUT_OFF, color1="red", color2="blue",
+                                   y_max_nucleus_volume=None, y_max_nucleus_high=None, y_max_avg_signal_488=None, y_max_total_signal_488=None):
     # Filter DataFrame based on 'Cell Type'
     filtered_df = lsm_df[lsm_df['Cell Type'] == type_to_analyse].copy()
 
@@ -278,19 +331,21 @@ def plot_metrics_by_group_and_ring(type_to_analyse, lsm_df, RING_COEFF_CUT_OFF, 
     filtered_df['Time'] = filtered_df['Time'].astype(int)
 
     # Sort 'Cisp' and 'LIV' as specified, then by 'Time'
-    # Assuming 'Cisp' values correctly sort with "-Cisplatin" first, adjust if needed
     filtered_df.sort_values(by=['Cisp', 'LIV', 'Time'], inplace=True)
 
     # Create 'Group' column after sorting
     filtered_df['Group'] = filtered_df['Cisp'] + "_" + filtered_df['LIV'] + "_" + filtered_df['Time'].astype(str) + "hr"
 
     # Setup for plots, one per metric, all in a single column
-    fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(12, 15), sharex=True)
+    fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(12, 15), sharex=True)
 
-    # Define the metrics to plot
-    metrics = ['Nucleus_volume', 'Average_signal_488', 'Total_signal_488']
+    # Define the metrics to plot and their respective y-axis max values
+    metrics = ['Nucleus_volume', 'Nucleus_height', 'Average_signal_488', 'Total_signal_488']
+    y_max_values = [y_max_nucleus_volume, y_max_nucleus_high, y_max_avg_signal_488, y_max_total_signal_488]
+    date = lsm_df['Date'][0]
     titles = [
-        f'Ring coeff {RING_COEFF_CUT_OFF} Cell Type: {type_to_analyse} \nNucleus Volume by Group and Ring',
+        f'Date: {date} \n Ring coeff {RING_COEFF_CUT_OFF} Cell Type: {type_to_analyse} \nNucleus Volume by Group and Ring',
+        'Nucleus Height by Group and Ring',
         'Average Signal 488 by Group and Ring',
         'Total Signal 488 by Group and Ring'
     ]
@@ -301,31 +356,23 @@ def plot_metrics_by_group_and_ring(type_to_analyse, lsm_df, RING_COEFF_CUT_OFF, 
     # Create an explicit order for the x-axis based on the sorted 'Group'
     group_order = filtered_df['Group'].unique()
 
-    for ax_idx, (ax, metric, title) in enumerate(zip(axs, metrics, titles)):
+    for ax_idx, (ax, metric, title, y_max) in enumerate(zip(axs, metrics, titles, y_max_values)):
         sns.boxplot(x='Group', y=metric, hue='Ring', data=filtered_df, ax=ax, palette=palette, order=group_order)
         ax.set_title(title)
-        ax.set_xlabel('Group' if metric == metrics[-1] else '')  # Only label the x-axis for the bottom plot
+        ax.set_xlabel('Group' if ax_idx == 2 else '')  # Only label the x-axis for the bottom plot
         ax.set_ylabel(metric)
+
+        if y_max is not None:
+            ax.set_ylim(top=y_max)  # Set the maximum y-value if specified
 
         # For the last plot only, annotate each group with counts for False and True separately
         if metric == 'Total_signal_488':
             for i, group in enumerate(group_order):
-                # Calculate counts for False and True within this group
                 false_count = filtered_df[(filtered_df['Group'] == group) & (filtered_df['Ring'] == False)].shape[0]
                 true_count = filtered_df[(filtered_df['Group'] == group) & (filtered_df['Ring'] == True)].shape[0]
 
-                # Position the annotations below the group names on the x-axis
-                # Adjust the positioning as necessary
                 ax.text(i - 0.2, -0.1, f'no-ring:{false_count}', horizontalalignment='center', size='small', color='black', weight='semibold', transform=ax.get_xaxis_transform())
                 ax.text(i + 0.2, -0.1, f'ring: {true_count}', horizontalalignment='center', size='small', color='black', weight='semibold', transform=ax.get_xaxis_transform())
 
     plt.tight_layout()
     return fig
-
-
-
-
-
-
-
-

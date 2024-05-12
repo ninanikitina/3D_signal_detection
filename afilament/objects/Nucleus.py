@@ -11,6 +11,16 @@ from objects import Utils
 from objects import Contour
 from unet.predict import run_predict_unet
 
+class FittedOval:
+    def __init__(self, contour):
+        self.contour = contour
+        self.fit_oval()
+
+    def fit_oval(self):
+        self.ellipse = cv2.fitEllipse(self.contour)
+        self.center = self.ellipse[0]
+        self.major_axis = int(self.ellipse[1][0])
+        self.minor_axis = int(self.ellipse[1][1])
 
 class Nucleus(object):
     """
@@ -30,6 +40,7 @@ class Nucleus(object):
         self.nuc_3D_whole_img = None #This image depict whole picture
         self.nuc_intensity = None
         self.nuc_cylinder_pix_num = None
+        self.fitted_oval = None
 
 
     def reconstruct(self, temp_folders, unet_parm, resolution, analysis_folder, norm_th, cnt_extremes):
@@ -63,12 +74,32 @@ class Nucleus(object):
         self.nucleus_3d_img = Utils.get_3d_img(temp_folders["nucleous_xsection"])
         self.nuc_3D_mask = Utils.get_3d_img(temp_folders["nucleus_mask"])
         self.nucleus_reco_3d(resolution, analysis_folder)
-        self.nuc_length = (cnt_extremes.right[0] - cnt_extremes.left[0]) * resolution.x
-        self.nuc_width = (cnt_extremes.bottom[1] - cnt_extremes.top[1]) * resolution.y
+
         point_cloud = np.array(self.point_cloud)
+
+        self.nuc_cylinder_pix_num = np.count_nonzero(self.nuc_max_projection_mask) * nucleus_3d_img.shape[2]
+
+        ##############Elipce Experimetn######################
+        # Find contours in the mask
+        # Find contours in the mask
+        contours, _ = cv2.findContours(self.nuc_max_projection_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contour = contours[0]
+
+        # Create a blank image to draw the results
+        result_img = np.zeros_like(self.nuc_max_projection_mask)
+
+        # Create FittedOval object
+        self.fitted_oval = FittedOval(contour)
+
+        self.nuc_length = self.fitted_oval.major_axis * resolution.x
+        self.nuc_width = (cnt_extremes.bottom[1] - cnt_extremes.top[1]) * resolution.y
+
         self.nuc_high_alternative = (max(point_cloud[:, 2]) - min(point_cloud[:, 2])) * resolution.z
         self.nuc_high = 2 * self.nuc_volume * 3/4 / (math.pi * self.nuc_length/2 * self.nuc_width/2)
-        self.nuc_cylinder_pix_num = np.count_nonzero(self.nuc_max_projection_mask) * nucleus_3d_img.shape[2]
+
+
+
+
 
 
     def  get_cut_off_z(self, cap_bottom_ratio):

@@ -80,15 +80,14 @@ def main():
                                                                               cells_img.name)
                 channels = cells_img.cells[0].channels
 
+                if len(aggregated_stat_list) > 0:
+                    analyser.save_aggregated_cells_stat_list(aggregated_stat_list, channels)
+                analyser.save_config("")
 
             except Exception as e:
                 logger.error(
                     f"\n----------- \n Img #{img_num} from file {config.confocal_img} was not analysed. \n Error: {e} \n----------- \n")
                 print("An exception occurred")
-
-        if len(aggregated_stat_list) > 0:
-            analyser.save_aggregated_cells_stat_list(aggregated_stat_list, channels)
-        analyser.save_config("")
 
         end = time.time()
         print(f"Total time is: {end - start}")

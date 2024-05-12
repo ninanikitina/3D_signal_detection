@@ -5,7 +5,7 @@
   "nucleus_channel_name": "Cy5-T1",
 
   "nucleus_unet_model": "../unet/models/CP_epoch200_nucleus_weight.corection_200_labling_WITH_FLAT_V2_512_512_no_agum_V2.pth",
-  "from_top_nucleus_unet_model": "../unet/models/top_nuc_models/CP_epoch200_max_pr_23zeiss_10leica_multiple_cells_no_val.pth",
+  "from_top_nucleus_unet_model": "../unet/models/top_nuc_models/CP_epoch200_max_pr_134cells_114train_20test_zeiss_lieca.pth",
   "unet_model_scale":1,
   "unet_model_thrh": 0.5,
 

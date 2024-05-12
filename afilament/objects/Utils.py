@@ -535,7 +535,7 @@ def get_nuclei_masks(temp_folders, output_analysis_folder, image_path, nuc_thesh
     draw_and_save_cnts_verification(output_analysis_folder, image_path, cnts, max_projection_origin_size, img_num)
     nuclei_xy_centers = [Contour.get_cnt_center(cont) for cont in cnts]
 
-    return nuclei_masks, nuclei_xy_centers
+    return nuclei_masks, nuclei_xy_centers, max_projection_origin_size
 
 
 def draw_and_save_cnts_verification(output_analysis_folder, image_path, cnts, max_progection_img, img_num):
@@ -550,6 +550,36 @@ def draw_and_save_cnts_verification(output_analysis_folder, image_path, cnts, ma
         cv2.putText(max_progection_img, str(i), org, fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=3, color=(255, 255, 0),
                     thickness=3)
     cv2.imwrite(ver_img_path, max_progection_img)
+
+
+def draw_and_save_cnts_and_ovals_verification(output_analysis_folder, image_path, max_progection_img, img_num, cells):
+    base_img_name = os.path.splitext(os.path.basename(image_path))[0]
+    ver_img_path = os.path.join(output_analysis_folder,
+                                base_img_name + "_img-num_" + str(img_num) + "_max_projection_w_oval.png")
+
+    # Convert grayscale image to 3-channel (BGR) image
+    max_progection_img_color = cv2.cvtColor(max_progection_img, cv2.COLOR_GRAY2BGR)
+
+
+    for cell in cells:
+        mask = cell.nucleus.nuc_max_projection_mask
+        fitted_oval = cell.nucleus.fitted_oval
+
+        # Draw the original contour in white
+        cv2.drawContours(max_progection_img_color, [fitted_oval.contour], 0, (255, 255, 255), thickness=3)
+
+        # Draw the fitted ellipse in yellow
+        cv2.ellipse(max_progection_img_color, fitted_oval.ellipse, (0, 255, 255), thickness=3)
+
+        org = (int(fitted_oval.center[0]), int(fitted_oval.center[1]))
+
+        # Print the dimensions of the fitted ellipse
+        cv2.putText(max_progection_img_color, f"# {str(cell.number)} L:{cell.nucleus.nuc_length:.2f} um W:{cell.nucleus.nuc_width:.2f})",
+                    org, fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=3, color=(255, 255, 0),  thickness=3)
+
+
+    cv2.imwrite(ver_img_path, max_progection_img_color)
+
 
 
 def remove_edge_nuc(cnts, img_dim):  # removes cells that touch the edges of the frame
