@@ -92,7 +92,7 @@ class Nucleus(object):
         self.fitted_oval = FittedOval(contour)
 
         self.nuc_length = self.fitted_oval.major_axis * resolution.x
-        self.nuc_width = (cnt_extremes.bottom[1] - cnt_extremes.top[1]) * resolution.y
+        self.nuc_width = self.fitted_oval.minor_axis * resolution.y
 
         self.nuc_high_alternative = (max(point_cloud[:, 2]) - min(point_cloud[:, 2])) * resolution.z
         self.nuc_high = 2 * self.nuc_volume * 3/4 / (math.pi * self.nuc_length/2 * self.nuc_width/2)

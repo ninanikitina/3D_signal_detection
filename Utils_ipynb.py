@@ -93,7 +93,9 @@ def extract_and_append_image_info(df, image_name_col='Image_name'):
         image_name = image_name.replace(" ", "")
 
         # Extract 'Base_image_name'
-        base_image_name = image_name.split("-LSM")[0]
+        base_image_name = image_name.split("_img-num")[0]
+        base_image_name = base_image_name.split(".czi")[0]
+        base_image_name = base_image_name.lower()
 
         # Extract 'Processing'
         processing = 'LSM' if 'LSM' in image_name else 'RAW'
@@ -103,9 +105,16 @@ def extract_and_append_image_info(df, image_name_col='Image_name'):
         date = date_pattern.search(image_name).group(0)
 
         # Extract 'Time'
-        time_pattern = re.compile(r'0hr|24hr|48hr')
-        time_match = time_pattern.search(image_name)
-        time = time_match.group(0)[:-2] if time_match else 'Unknown'
+        time_pattern_1 = re.compile(r'0hr|24hr|48hr')
+        time_pattern_2 = re.compile(r'0r|24r|48r')
+        time_pattern_3 = re.compile(r'0h|24h|48h')
+        time_match_1 = time_pattern_1.search(image_name)
+        time_match_2 = time_pattern_2.search(image_name)
+        time_match_3 = time_pattern_3.search(image_name)
+        if time_match_1:
+            time = time_match_1.group(0)[:-2]
+        elif time_match_2 or time_match_3:
+            time = time_match_2.group(0)[:-1]
 
         # Extract 'Cell Type'
         cell_type_pattern = re.compile(r'KASH(\+doxy)?|MSC')
@@ -241,8 +250,8 @@ def refine_and_filter_data(df, pixel_size):
     df['AF488-T3 av_signal_in_nuc_cylinder'] = (df['AF488-T3 sum_pix_in_nuc_cylinder'] / df['Nucleus_cylinder, pixels_number']).astype('float64')
 
     # Remove unwanted columns
-    columns_to_remove = ['Image_name', 'Nucleus_cylinder, pixels_number', 'Nucleus_length, micrometre',
-                         'Nucleus_width, micrometre', 'Cy5-T1 av_signal_in_nuc_area_3D',
+    columns_to_remove = ['Image_name', 'Nucleus_cylinder, pixels_number',
+                         'Cy5-T1 av_signal_in_nuc_area_3D',
                          'Cy5-T1 sum_pix_in_nuc_cylinder', 'Cy5-T1 has ring', 'Cy5-T1 ring intensity coef',
                          'AF594-T2 sum_pix_in_nuc_cylinder',
                          'AF594-T2 has ring', 'AF488-T3 sum_pix_in_nuc_cylinder', 'AF488-T3 has ring',
@@ -252,6 +261,8 @@ def refine_and_filter_data(df, pixel_size):
     # Rename columns
     columns_to_rename = {
         'Nucleus_volume, cubic_micrometre': 'Nucleus_volume',
+        'Nucleus_length, micrometre': 'Nucleus_length',
+        'Nucleus_width, micrometre': 'Nucleus_width',
         'Nucleus_high, micrometre': 'Nucleus_height',
         'AF594-T2 ring intensity coef': 'Ring_coefficient',
         'AF488-T3 av_signal_in_nuc_area_3D': 'Average_signal_488',

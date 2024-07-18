@@ -53,14 +53,14 @@ class JavaVM:
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Cell Analysis Script")
-    parser.add_argument('img_path', type=str, help='Path to the confocal image file')
-    return parser.parse_args()
-
+    parser.add_argument('img_path', type=str, nargs='?', default=None, help='Path to the confocal image file')
+    args = parser.parse_args()
+    return args.img_path
 
 def main():
 
-    args = parse_arguments()
-    config = load_config("config.json", args.img_path)
+    img_path = parse_arguments()
+    config = load_config("config.json", img_path)
     logger = setup_logging()
 
     with JavaVM():
@@ -69,6 +69,8 @@ def main():
 
         aggregated_stat_list = []
         channels = None
+
+        o = glob.glob(os.path.join(config.confocal_img, '*.czi'))
 
 
         for img_num, czi_file in enumerate(glob.glob(os.path.join(config.confocal_img, '*.czi'))):
@@ -82,6 +84,7 @@ def main():
 
                 if len(aggregated_stat_list) > 0:
                     analyser.save_aggregated_cells_stat_list(aggregated_stat_list, channels)
+
                 analyser.save_config("")
 
             except Exception as e:

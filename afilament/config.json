@@ -1,17 +1,17 @@
 {
-  "confocal_img":  "C:/Users/nnina/Desktop/Cisp_Test_Image_Set",
+  "confocal_img":  "Z:/Common/BMMB/LSM900 files/Uzer Lab/NN/2024.07.09_Actin_Tubulin_3D_auto/LIV_LSM",
   "output_analysis_path": "../afilament/analysis_data",
   "output_verification_path": "../afilament/verification_data",
-  "nucleus_channel_name": "Cy5-T1",
+  "nucleus_channel_name": "DAPI-T3",
 
-  "nucleus_unet_model": "../unet/models/CP_epoch200_nucleus_weight.corection_200_labling_WITH_FLAT_V2_512_512_no_agum_V2.pth",
+  "nucleus_unet_model": "../unet/models/CP_epoch200_nucleus_zeiss_plus_6cells_weight_correction_20.pth",
   "from_top_nucleus_unet_model": "../unet/models/top_nuc_models/CP_epoch200_max_pr_134cells_114train_20test_zeiss_lieca.pth",
   "unet_model_scale":1,
   "unet_model_thrh": 0.5,
 
-  "norm_th": 65535,
+  "norm_th": 20000,
   "find_biggest_mode": "unet",
-  "nuc_theshold": 10,
-  "nuc_area_min_pixels_num": 15000,
-  "nuc_area_max_pixels_num": 1600000
+  "nuc_theshold": 50,
+  "nuc_area_min_pixels_num": 10000,
+  "nuc_area_max_pixels_num": 16000000
 }
